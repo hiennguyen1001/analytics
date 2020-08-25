@@ -106,8 +106,12 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
     _trackingHttp.dio.options.contentType = 'application/x-www-form-urlencoded';
 
-    if (firstName == null) {
+    if (_firstName == null) {
       _firstName = email.substring(0, email.indexOf('@'));
+    }
+
+    if (_lastName == null) {
+      _lastName = '';
     }
   }
 
