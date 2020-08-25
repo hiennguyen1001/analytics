@@ -164,7 +164,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
     var contactId = contact['id'];
     var response = await _http.get("${_url}fields");
-    if (response['fields'] != null) {
+    if (response['fields'] != null && response['fields'].isNotEmpty) {
       for (var property in properties.entries) {
         String fieldId;
         for (var field in response['fields']) {
@@ -176,36 +176,54 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
         if (fieldId == null) {
           // create custom field
-          var body = """
-          {
-          "field": {
-            "type": "text",
-            "title": "${property.key}",
-            "descript": "${property.key}",
-            "visible": 1,
-            }
-          }
-          """;
-          var res = await _http.post("${_url}fields", data: body);
-          fieldId = res['field']['id'];
+          fieldId = await _createField(property.key);
         }
 
         // Update field value
-        var body = """
-          {
-            "fieldValue": {
-                "contact": $contactId,
-                "field": $fieldId,
-                "value": "${property.value}"
-            }
-          }
-          """;
-
-        await _http.post("${_url}fieldValues", data: body);
+        await _updateField(contactId, fieldId, property.value);
+      }
+    } else {
+      for (var property in properties.entries) {
+        // create custom field
+        var fieldId = await _createField(property.key);
+        // Update field value
+        await _updateField(contactId, fieldId, property.value);
       }
     }
 
     return null;
+  }
+
+  /// Update AC custom field with value
+  Future<dynamic> _updateField(
+      String contactId, String fieldId, dynamic value) async {
+    var body = """
+          {
+            "fieldValue": {
+                "contact": $contactId,
+                "field": $fieldId,
+                "value": "$value"
+            }
+          }
+          """;
+
+    await _http.post("${_url}fieldValues", data: body);
+  }
+
+  /// Create AC custom field
+  Future<dynamic> _createField(String key) async {
+    var body = """
+          {
+            "field": {
+              "type": "text",
+              "title": "$key",
+              "descript": "$key",
+              "visible": 1
+            }
+          }
+          """;
+    var res = await _http.post("${_url}fields", data: body);
+    return res['field']['id'];
   }
 
   /// Create contact if not exist
