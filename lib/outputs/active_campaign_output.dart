@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:analytics/analytic_log_adapter.dart';
 import 'package:analytics/analytics.dart';
 import 'package:robust_http/robust_http.dart';
@@ -37,6 +39,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   /// User last name
   String _lastName;
 
+  /// Suffix url
+  String _suffixUrl;
+
   /// Initialize output
   ///
   /// `email`: user email
@@ -65,6 +70,8 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     _email = email;
     _proxyUrl = config["proxyUrl"];
     _enableHttp = config["enableHttp"] ?? true;
+    _suffixUrl = _proxyUrl != null && !_proxyUrl.endsWith('/') ? '/' : '';
+
     if (_enableHttp == true) {
       _baseUrl =
           'https://${config["activeCampaignAccount"]}.api-us1.com/api/3/';
@@ -86,9 +93,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     // init for event tracking http
     if (_proxyUrl != null) {
       if (_enableHttp) {
-        _eventUrl = _proxyUrl + 'https://trackcmp.net/';
+        _eventUrl = _proxyUrl + _suffixUrl + 'https://trackcmp.net/';
       } else {
-        _eventUrl = _proxyUrl + 'trackcmp.net/';
+        _eventUrl = _proxyUrl + _suffixUrl + 'trackcmp.net/';
       }
 
       _trackingHttp = HTTP(null, config);
@@ -98,15 +105,22 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
 
     _trackingHttp.dio.options.contentType = 'application/x-www-form-urlencoded';
+
+    if (firstName == null) {
+      _firstName = email.substring(0, email.indexOf('@'));
+    }
   }
 
   @override
   void sendEvent(String name, dynamic info) {
-    if (!(info is String)) {
-      throw FormatException('event info must be String');
+    String eventData;
+    if (info is String) {
+      eventData = info;
+    } else {
+      eventData = jsonEncode(info);
     }
 
-    _trackEvent(name, _email, info)
+    _trackEvent(name, _email, eventData)
         .then((value) => null)
         .catchError((e, stacktrace) {
       AnalyticsLogAdapter.shared.logger?.e('Send event error', e, stacktrace);
@@ -119,14 +133,15 @@ class ActiveCampaignOutput extends AnalyticsOutput {
             firstName: _firstName, lastName: _lastName, properties: info)
         .then((value) => null)
         .catchError((e, stacktrace) {
-      AnalyticsLogAdapter.shared.logger?.e('Send event error', e, stacktrace);
+      AnalyticsLogAdapter.shared.logger
+          ?.e('Send property error', e, stacktrace);
     });
   }
 
   /// Get the url if using proxy
   get _url {
     if (_proxyUrl != null) {
-      return _proxyUrl + _baseUrl;
+      return _proxyUrl + _suffixUrl + _baseUrl;
     }
 
     return '';

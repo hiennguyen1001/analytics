@@ -35,6 +35,7 @@ class Analytics {
 
   /// Loop through all outputs to send analytics events
   void sendEvent(String name, dynamic info) {
+    if (_outputs == null) return;
     for (final output in _outputs) {
       output.sendEvent(name, info);
     }
@@ -42,6 +43,7 @@ class Analytics {
 
   /// Loop through all outputs to send user properties
   void sendUserProperty(Map info) {
+    if (_outputs == null) return;
     for (final output in _outputs) {
       output.sendUserProperty(info);
     }
