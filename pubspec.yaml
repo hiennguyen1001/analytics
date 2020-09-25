@@ -12,10 +12,16 @@ dependencies:
   flutter:
     sdk: flutter
 
+  shared_preferences: ^0.5.12
+  uuid: ^2.2.2
+
   robust_http:
     git:
       url: git://github.com/bookbot-kids/robust_http.git
       ref: 0.0.4
+  mixpanel_analytics:
+    git:
+      url: git://github.com/bookbot-kids/mixpanel_analytics.git
 
 dev_dependencies:
   flutter_test:

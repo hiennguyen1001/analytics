@@ -1,0 +1,104 @@
+import 'dart:async';
+
+import 'package:analytics/analytics.dart';
+import 'package:mixpanel_analytics/mixpanel_analytics.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
+
+class MixPanelOutput extends AnalyticsOutput {
+  MixPanelOutput(Map configs, {String id}) {
+    _mixpanel = MixpanelAnalytics(
+        token: configs['mixpanelId'],
+        proxyUrl: configs['crossOriginUrl'],
+        userId$: _user$.stream,
+        verbose: true,
+        shouldAnonymize: true,
+        shaFn: (value) => value,
+        onError: (e) {});
+
+    if (id != null) {
+      setUserId(id);
+    }
+  }
+
+  static const String _userIdKey = 'mixpanel_user_id';
+
+  MixpanelAnalytics _mixpanel;
+  SharedPreferences _prefs;
+  final _user$ = StreamController<String>.broadcast();
+
+  @override
+  String get name => 'MixPanelOutput';
+
+  @override
+  void sendEvent(String name, dynamic properties) {
+    _sendEvent(name, properties).then((value) => null);
+  }
+
+  @override
+  void sendUserProperty(Map info) {
+    _sendUserProperty(info).then((value) => null);
+  }
+
+  Future<SharedPreferences> get prefs async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs;
+  }
+
+  Future<String> get _mixpanelUserId async {
+    var id = (await prefs).getString(_userIdKey);
+    if (id == null) {
+      id = Uuid().v4();
+      await (await prefs).setString(_userIdKey, id);
+    }
+
+    return id;
+  }
+
+  @override
+  Future<void> setUserId(String id) async {
+    var oldId = await _mixpanelUserId;
+    // only migrate if id is changed
+    if (oldId != id && id != null && oldId != null) {
+      // migrate cognito user id into guest id
+      var properties = <String, dynamic>{};
+      properties['\$identified_id'] = id;
+      properties['\$anon_id'] = oldId;
+      await _mixpanel
+          .track(event: '\$identify', properties: properties)
+          .then((value) async {
+        print('merge [$oldId, $id] $value');
+        await (await prefs).setString(_userIdKey, id);
+      }).catchError((e) {
+        print('merge [$oldId, $id] error: $e');
+      });
+    }
+  }
+
+  Future<void> _sendUserProperty(Map info) async {
+    for (var key in info.keys) {
+      var propertyName = key;
+      var propertyValue = info[key];
+
+      await _mixpanel.engage(operation: MixpanelUpdateOperations.$set, value: {
+        propertyName: propertyValue,
+        'distinct_id': await _mixpanelUserId,
+      }).then((value) {
+        AnalyticsLogAdapter.shared.logger?.i('trackUserProperty $value');
+      }).catchError((e, stacktrace) {
+        AnalyticsLogAdapter.shared.logger
+            ?.e('trackUserProperty error: $e', e, stacktrace);
+      });
+    }
+  }
+
+  Future<void> _sendEvent(String event, dynamic properties) async {
+    properties['distinct_id'] = await _mixpanelUserId;
+    await _mixpanel.track(event: event, properties: properties).then((value) {
+      AnalyticsLogAdapter.shared.logger?.i('sendEvent $value');
+    }).catchError((e, stacktrace) {
+      AnalyticsLogAdapter.shared.logger
+          ?.e('sendEvent error: $e', e, stacktrace);
+    });
+  }
+}

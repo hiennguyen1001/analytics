@@ -6,42 +6,6 @@ import 'package:robust_http/robust_http.dart';
 
 /// An output to send tracking event into actice campaign.
 class ActiveCampaignOutput extends AnalyticsOutput {
-  /// AC http api client
-  HTTP _http;
-
-  /// AC tracking http client
-  HTTP _trackingHttp;
-
-  /// Event tracking url
-  String _eventUrl;
-
-  /// Base api url
-  String _baseUrl;
-
-  /// Proxy url
-  String _proxyUrl;
-
-  /// whether to include http prefix
-  bool _enableHttp;
-
-  /// AC event key
-  String _eventKey;
-
-  /// AC event act id
-  String _eventActid;
-
-  /// User email
-  String _email;
-
-  /// Use first name
-  String _firstName;
-
-  /// User last name
-  String _lastName;
-
-  /// Suffix url
-  String _suffixUrl;
-
   /// Initialize output
   ///
   /// `email`: user email
@@ -68,8 +32,8 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     _firstName = firstName;
     _lastName = lastName;
     _email = email;
-    _proxyUrl = config["proxyUrl"];
-    _enableHttp = config["enableHttp"] ?? true;
+    _proxyUrl = config['proxyUrl'];
+    _enableHttp = config['enableHttp'] ?? true;
     _suffixUrl = _proxyUrl != null && !_proxyUrl.endsWith('/') ? '/' : '';
 
     if (_enableHttp == true) {
@@ -85,10 +49,10 @@ class ActiveCampaignOutput extends AnalyticsOutput {
       _http = HTTP(_baseUrl, config);
     }
 
-    _http.headers = {"Api-Token": config['activeCampaignKey']};
+    _http.headers = {'Api-Token': config['activeCampaignKey']};
 
-    _eventKey = config["activeCampaignEventKey"];
-    _eventActid = config["activeCampaignEventActid"];
+    _eventKey = config['activeCampaignEventKey'];
+    _eventActid = config['activeCampaignEventActid'];
 
     // init for event tracking http
     if (_proxyUrl != null) {
@@ -106,14 +70,49 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
     _trackingHttp.dio.options.contentType = 'application/x-www-form-urlencoded';
 
-    if (_firstName == null) {
-      _firstName = email.substring(0, email.indexOf('@'));
-    }
+    _firstName ??= email.substring(0, email.indexOf('@'));
 
-    if (_lastName == null) {
-      _lastName = '';
-    }
+    _lastName ??= '';
   }
+
+  /// Base api url
+  String _baseUrl;
+
+  /// User email
+  String _email;
+
+  /// whether to include http prefix
+  bool _enableHttp;
+
+  /// AC event act id
+  String _eventActid;
+
+  /// AC event key
+  String _eventKey;
+
+  /// Event tracking url
+  String _eventUrl;
+
+  /// Use first name
+  String _firstName;
+
+  /// AC http api client
+  HTTP _http;
+
+  /// User last name
+  String _lastName;
+
+  /// Proxy url
+  String _proxyUrl;
+
+  /// Suffix url
+  String _suffixUrl;
+
+  /// AC tracking http client
+  HTTP _trackingHttp;
+
+  @override
+  String get name => 'ActiveCampaignOutput';
 
   @override
   void sendEvent(String name, dynamic info) {
@@ -142,8 +141,11 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     });
   }
 
+  @override
+  Future<void> setUserId(String value) async {}
+
   /// Get the url if using proxy
-  get _url {
+  String get _url {
     if (_proxyUrl != null) {
       return _proxyUrl + _suffixUrl + _baseUrl;
     }
@@ -167,7 +169,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
 
     var contactId = contact['id'];
-    var response = await _http.get("${_url}fields");
+    var response = await _http.get('${_url}fields');
     if (response['fields'] != null && response['fields'].isNotEmpty) {
       for (var property in properties.entries) {
         String fieldId;
@@ -178,10 +180,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
           }
         }
 
-        if (fieldId == null) {
-          // create custom field
-          fieldId = await _createField(property.key);
-        }
+        fieldId ??= await _createField(property.key);
 
         // Update field value
         await _updateField(contactId, fieldId, property.value);
@@ -201,7 +200,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   /// Update AC custom field with value
   Future<dynamic> _updateField(
       String contactId, String fieldId, dynamic value) async {
-    var body = """
+    var body = '''
           {
             "fieldValue": {
                 "contact": $contactId,
@@ -209,14 +208,14 @@ class ActiveCampaignOutput extends AnalyticsOutput {
                 "value": "$value"
             }
           }
-          """;
+          ''';
 
-    await _http.post("${_url}fieldValues", data: body);
+    await _http.post('${_url}fieldValues', data: body);
   }
 
   /// Create AC custom field
   Future<dynamic> _createField(String key) async {
-    var body = """
+    var body = '''
           {
             "field": {
               "type": "text",
@@ -225,8 +224,8 @@ class ActiveCampaignOutput extends AnalyticsOutput {
               "visible": 1
             }
           }
-          """;
-    var res = await _http.post("${_url}fields", data: body);
+          ''';
+    var res = await _http.post('${_url}fields', data: body);
     return res['field']['id'];
   }
 
@@ -237,7 +236,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     var contact;
     // get contact by email
     var params = {'email': email};
-    var response = await _http.get("${_url}contacts", parameters: params);
+    var response = await _http.get('${_url}contacts', parameters: params);
     if (response['contacts'] != null) {
       List contacts = response['contacts'];
       contact = contacts.firstWhere((item) => item['email'] == email,
@@ -246,7 +245,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
     if (contact == null || forceUpdated == true) {
       // create new contact
-      var body = """
+      var body = '''
         {
           "contact": {
             "email": "$email",
@@ -254,7 +253,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
             "lastName": "$lastName"
           }
         }
-        """;
+        ''';
       var response = await _http.post('${_url}contact/sync', data: body);
       if (response['contact'] != null) {
         return response['contact'];

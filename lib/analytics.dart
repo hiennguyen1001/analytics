@@ -2,6 +2,7 @@ library analytics;
 
 export 'package:analytics/outputs/active_campaign_output.dart';
 export 'analytic_log_adapter.dart';
+export 'package:analytics/outputs/mix_panel_output.dart';
 
 /// Analytics output abstract class
 abstract class AnalyticsOutput {
@@ -16,36 +17,63 @@ abstract class AnalyticsOutput {
   ///
   /// `info` user properties
   void sendUserProperty(Map info);
+
+  /// Set user id for service
+  Future<void> setUserId(String value);
+
+  /// Get the analytics name
+  String get name;
 }
 
 /// Analytics class
 class Analytics {
   Analytics._privateConstructor();
   static Analytics shared = Analytics._privateConstructor();
-  List<AnalyticsOutput> _outputs;
+  final List<AnalyticsOutput> _outputs = [];
 
-  /// Set the analytics outputs
-  set output(dynamic output) {
+  /// Add the analytics outputs
+  void addOutput(dynamic output) {
     if (output is List<AnalyticsOutput>) {
-      _outputs = output;
+      _outputs.addAll(output);
     } else if (output is AnalyticsOutput) {
-      _outputs = [output];
+      _outputs.add(output);
     }
   }
 
   /// Loop through all outputs to send analytics events
-  void sendEvent(String name, dynamic info) {
-    if (_outputs == null) return;
+  /// If an `outputTarget` is specified, then just use that kind output
+  void sendEvent(String name, dynamic info, {String outputTarget}) {
     for (final output in _outputs) {
-      output.sendEvent(name, info);
+      if (outputTarget != null) {
+        // if there is an output target, then just run it & ignore the rest
+        if (outputTarget == output.name) {
+          output.sendEvent(name, info);
+        }
+      } else {
+        output.sendEvent(name, info);
+      }
     }
   }
 
   /// Loop through all outputs to send user properties
-  void sendUserProperty(Map info) {
-    if (_outputs == null) return;
+  /// If an `outputTarget` is specified, then just use that kind output
+  void sendUserProperty(Map info, {String outputTarget}) {
     for (final output in _outputs) {
-      output.sendUserProperty(info);
+      if (outputTarget != null) {
+        // if there is an output target, then just run it & ignore the rest
+        if (outputTarget == output.name) {
+          output.sendUserProperty(info);
+        }
+      } else {
+        output.sendUserProperty(info);
+      }
+    }
+  }
+
+  /// Set user id for all outputs
+  Future<void> setUserId(String value) async {
+    for (final output in _outputs) {
+      await output.setUserId(value);
     }
   }
 }
