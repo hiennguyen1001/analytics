@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:analytics/analytic_log_adapter.dart';
 import 'package:analytics/analytics.dart';
 import 'package:robust_http/robust_http.dart';
 
@@ -27,8 +26,16 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   /// `activeCampaignEventKey`: ac event key
   ///
   /// `activeCampaignEventActid`: ac event act id
-  ActiveCampaignOutput(String email, Map config,
-      {String firstName, String lastName}) {
+  ///
+  /// `tags`: user tags
+  ActiveCampaignOutput(
+    String email,
+    Map config, {
+    String firstName,
+    String lastName,
+    List<String> tags,
+  }) {
+    _tags = tags ?? <String>[];
     _firstName = firstName;
     _lastName = lastName;
     _email = email;
@@ -111,11 +118,14 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   /// AC tracking http client
   HTTP _trackingHttp;
 
+  /// User tags to add to contact
+  List<String> _tags;
+
   @override
   String get name => 'ActiveCampaignOutput';
 
   @override
-  void sendEvent(String name, dynamic info) {
+  Future<void> sendEvent(String name, dynamic info) async {
     String eventData;
     if (info is String) {
       eventData = info;
@@ -123,22 +133,13 @@ class ActiveCampaignOutput extends AnalyticsOutput {
       eventData = jsonEncode(info);
     }
 
-    _trackEvent(name, _email, eventData)
-        .then((value) => null)
-        .catchError((e, stacktrace) {
-      AnalyticsLogAdapter.shared.logger?.e('Send event error', e, stacktrace);
-    });
+    await _trackEvent(name, _email, eventData);
   }
 
   @override
-  void sendUserProperty(Map info) {
-    _updateProperties(_email,
-            firstName: _firstName, lastName: _lastName, properties: info)
-        .then((value) => null)
-        .catchError((e, stacktrace) {
-      AnalyticsLogAdapter.shared.logger
-          ?.e('Send property error', e, stacktrace);
-    });
+  Future<void> sendUserProperty(Map info) async {
+    await _updateProperties(_email,
+        firstName: _firstName, lastName: _lastName, properties: info);
   }
 
   @override
@@ -256,6 +257,10 @@ class ActiveCampaignOutput extends AnalyticsOutput {
         ''';
       var response = await _http.post('${_url}contact/sync', data: body);
       if (response['contact'] != null) {
+        for (var tag in _tags) {
+          await addTagToContact(tag, response['contact']['id']);
+        }
+
         return response['contact'];
       }
     }
@@ -276,5 +281,49 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     };
 
     return await _trackingHttp.post('${_eventUrl}event', data: params);
+  }
+
+  /// Add a tag into contact. Create if not exist
+  Future<void> addTagToContact(String tag, String contactId) async {
+    // get all tags
+    var response = await _http.get('${_url}tags');
+    var tagIds = <String, String>{};
+    if (response['tags'] != null) {
+      List tags = response['tags'];
+      tags.forEach((item) {
+        tagIds[item['id']] = item['tag'];
+      });
+    }
+
+    var tagId =
+        tagIds.keys.firstWhere((k) => tagIds[k] == tag, orElse: () => null);
+    // create tag if not exist
+    if (tagId == null) {
+      var body = '''
+      {
+        "tag": {
+          "tag": "$tag",
+          "tagType": "contact",
+          "description": "$tag"
+        }
+      }
+      ''';
+      var response = await _http.post('${_url}tags', data: body);
+      if (response['tag'] != null) {
+        tagId = response['tag']['id'];
+      }
+    }
+
+    // then add to contact
+    var body = '''
+      {
+        "contactTag": {
+          "contact": "$contactId",
+          "tag": "$tagId"
+        }
+      }
+      ''';
+
+    await _http.post('${_url}contactTags', data: body);
   }
 }

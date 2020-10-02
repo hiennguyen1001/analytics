@@ -31,13 +31,13 @@ class MixPanelOutput extends AnalyticsOutput {
   String get name => 'MixPanelOutput';
 
   @override
-  void sendEvent(String name, dynamic properties) {
-    _sendEvent(name, properties).then((value) => null);
+  Future<void> sendEvent(String name, dynamic properties) async {
+    await _sendEvent(name, properties);
   }
 
   @override
-  void sendUserProperty(Map info) {
-    _sendUserProperty(info).then((value) => null);
+  Future<void> sendUserProperty(Map info) async {
+    await _sendUserProperty(info);
   }
 
   Future<SharedPreferences> get prefs async {
@@ -67,10 +67,11 @@ class MixPanelOutput extends AnalyticsOutput {
       await _mixpanel
           .track(event: '\$identify', properties: properties)
           .then((value) async {
-        print('merge [$oldId, $id] $value');
+        AnalyticsLogAdapter.shared.logger?.i('merge [$oldId, $id] $value');
         await (await prefs).setString(_userIdKey, id);
-      }).catchError((e) {
-        print('merge [$oldId, $id] error: $e');
+      }).catchError((e, stacktrace) {
+        AnalyticsLogAdapter.shared.logger
+            ?.e('merge [$oldId, $id] error: $e', e, stacktrace);
       });
     }
   }
