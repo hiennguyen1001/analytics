@@ -121,6 +121,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   /// User tags to add to contact
   List<String> _tags;
 
+  /// User contact id
+  String _contactId;
+
   @override
   String get name => 'ActiveCampaignOutput';
 
@@ -163,13 +166,12 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     if (properties == null) {
       return null;
     }
-    var contact = await _createContact(email,
+    var contactId = await _createContact(email,
         firstName: firstName, lastName: lastName, forceUpdated: forceUpdated);
-    if (contact == null || contact['id'] == null) {
+    if (contactId) {
       return null;
     }
 
-    var contactId = contact['id'];
     var fields = await _listFields();
     AnalyticsLogAdapter.shared.logger?.i('existing fields: [${fields.length}]');
     if (fields.isNotEmpty) {
@@ -258,9 +260,13 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   }
 
   /// Create contact if not exist
-  /// Return a contact object
+  /// Return a contact id
   Future<dynamic> _createContact(String email,
       {String firstName, String lastName, bool forceUpdated = false}) async {
+    if (_contactId != null && _contactId.isNotEmpty) {
+      return _contactId;
+    }
+
     var contact;
     // get contact by email
     var params = {'email': email};
@@ -285,15 +291,17 @@ class ActiveCampaignOutput extends AnalyticsOutput {
         ''';
       var response = await _http.post('${_url}contact/sync', data: body);
       if (response['contact'] != null) {
+        _contactId = response['contact']['id'];
         for (var tag in _tags) {
           await addTagToContact(tag, response['contact']['id']);
         }
 
-        return response['contact'];
+        return _contactId;
       }
     }
 
-    return contact;
+    _contactId = contact['id'];
+    return _contactId;
   }
 
   /// Send tracking event
