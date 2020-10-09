@@ -170,11 +170,12 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
 
     var contactId = contact['id'];
-    var response = await _http.get('${_url}fields');
-    if (response['fields'] != null && response['fields'].isNotEmpty) {
+    var fields = await _listFields();
+    AnalyticsLogAdapter.shared.logger?.i('existing fields: [$fields]');
+    if (fields.isNotEmpty) {
       for (var property in properties.entries) {
         String fieldId;
-        for (var field in response['fields']) {
+        for (var field in fields) {
           if (property.key == field['title']) {
             fieldId = field['id'];
             break;
@@ -196,6 +197,25 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
 
     return null;
+  }
+
+  Future<dynamic> _listFields() async {
+    var fields = [];
+    var offset = 0;
+    var totalFields = 0;
+    final maxPage = 100;
+
+    do {
+      var response =
+          await _http.get('${_url}fields?limit=$maxPage&offset=$offset');
+      fields.addAll(response['fields']);
+      totalFields = int.parse(response['meta']['total']);
+      offset += maxPage;
+      AnalyticsLogAdapter.shared.logger
+          ?.i('_listFields offset = $offset, totalFields = $totalFields');
+    } while (offset < totalFields);
+
+    return fields;
   }
 
   /// Update AC custom field with value
