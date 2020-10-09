@@ -171,7 +171,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
     var contactId = contact['id'];
     var fields = await _listFields();
-    AnalyticsLogAdapter.shared.logger?.i('existing fields: [$fields]');
+    AnalyticsLogAdapter.shared.logger?.i('existing fields: [${fields.length}]');
     if (fields.isNotEmpty) {
       for (var property in properties.entries) {
         String fieldId;
@@ -184,6 +184,8 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
         fieldId ??= await _createField(property.key);
 
+        AnalyticsLogAdapter.shared.logger?.i(
+            'update value ${property.value} for field $fieldId in contact $contactId');
         // Update field value
         await _updateField(contactId, fieldId, property.value);
       }
