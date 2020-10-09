@@ -252,17 +252,23 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     return res['field']['id'];
   }
 
+  Future<dynamic> createContact() async {
+    await _createContact(_email,
+        firstName: _firstName, lastName: _lastName, forceUpdated: false);
+  }
+
   /// Create contact if not exist
   /// Return a contact object
   Future<dynamic> _createContact(String email,
       {String firstName, String lastName, bool forceUpdated = false}) async {
     var contact;
     // get contact by email
-    var params = {'email': email};
+    var params = {'email': email.replaceAll('+', '%2b')};
     var response = await _http.get('${_url}contacts', parameters: params);
     if (response['contacts'] != null) {
       List contacts = response['contacts'];
-      contact = contacts.firstWhere((item) => item['email'] == email,
+      contact = contacts.firstWhere(
+          (item) => item['email'].replaceAll(' ', '+') == email,
           orElse: () => null);
     }
 
@@ -308,7 +314,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   /// Add a tag into contact. Create if not exist
   Future<void> addTagToContact(String tag, String contactId) async {
     // get all tags
-    var response = await _http.get('${_url}tags');
+    var response = await _http.get('${_url}tags?limit=100');
     var tagIds = <String, String>{};
     if (response['tags'] != null) {
       List tags = response['tags'];
