@@ -263,7 +263,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
       {String firstName, String lastName, bool forceUpdated = false}) async {
     var contact;
     // get contact by email
-    var params = {'email': email.replaceAll('+', '%2b')};
+    var params = {'email': email};
     var response = await _http.get('${_url}contacts', parameters: params);
     if (response['contacts'] != null) {
       List contacts = response['contacts'];
