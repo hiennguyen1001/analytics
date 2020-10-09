@@ -79,7 +79,7 @@ class Analytics {
             await output.sendUserProperty(info);
           } catch (e, stacktrace) {
             AnalyticsLogAdapter.shared.logger
-                ?.e('Send property error', e, stacktrace);
+                ?.e('Send property error $e', e, stacktrace);
           }
         }
       } else {
@@ -87,7 +87,7 @@ class Analytics {
           await output.sendUserProperty(info);
         } catch (e, stacktrace) {
           AnalyticsLogAdapter.shared.logger
-              ?.e('Send property error', e, stacktrace);
+              ?.e('Send property error $e', e, stacktrace);
         }
       }
     }

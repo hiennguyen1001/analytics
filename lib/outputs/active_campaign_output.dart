@@ -168,7 +168,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
     var contactId = await _createContact(email,
         firstName: firstName, lastName: lastName, forceUpdated: forceUpdated);
-    if (contactId) {
+    if (contactId == null) {
       return null;
     }
 
