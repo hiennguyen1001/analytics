@@ -13,7 +13,7 @@ void main() {
 
     var output = ActiveCampaignOutput('user1@test.com', config);
     Analytics.shared.addOutput(output);
-    Analytics.shared.sendEvent('test', {'data': 'test event'});
+    Analytics.shared.sendEvent('test', info: {'data': 'test event'});
     assert(true);
   });
 }

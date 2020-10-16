@@ -28,7 +28,7 @@ class MixPanelOutput extends AnalyticsOutput {
   final _user$ = StreamController<String>.broadcast();
 
   @override
-  String get name => 'MixPanelOutput';
+  String get name => 'mixPanel';
 
   @override
   Future<void> sendEvent(String name, dynamic properties) async {
@@ -67,10 +67,10 @@ class MixPanelOutput extends AnalyticsOutput {
       await _mixpanel
           .track(event: '\$identify', properties: properties)
           .then((value) async {
-        AnalyticsLogAdapter.shared.logger?.i('merge [$oldId, $id] $value');
+        Analytics.shared.logger?.i('merge [$oldId, $id] $value');
         await (await prefs).setString(_userIdKey, id);
       }).catchError((e, stacktrace) {
-        AnalyticsLogAdapter.shared.logger
+        Analytics.shared.logger
             ?.e('merge [$oldId, $id] error: $e', e, stacktrace);
       });
     }
@@ -81,13 +81,15 @@ class MixPanelOutput extends AnalyticsOutput {
       var propertyName = key;
       var propertyValue = info[key];
 
-      await _mixpanel.engage(operation: MixpanelUpdateOperations.$set, value: {
-        propertyName: propertyValue,
-        'distinct_id': await _mixpanelUserId,
-      }).then((value) {
-        AnalyticsLogAdapter.shared.logger?.i('trackUserProperty $value');
+      await _mixpanel.engage(
+          operation: MixpanelUpdateOperations.$set,
+          value: <String, dynamic>{
+            propertyName: propertyValue,
+            'distinct_id': await _mixpanelUserId,
+          }).then((value) {
+        Analytics.shared.logger?.i('trackUserProperty $value');
       }).catchError((e, stacktrace) {
-        AnalyticsLogAdapter.shared.logger
+        Analytics.shared.logger
             ?.e('trackUserProperty error: $e', e, stacktrace);
       });
     }
@@ -95,11 +97,13 @@ class MixPanelOutput extends AnalyticsOutput {
 
   Future<void> _sendEvent(String event, dynamic properties) async {
     properties['distinct_id'] = await _mixpanelUserId;
-    await _mixpanel.track(event: event, properties: properties).then((value) {
-      AnalyticsLogAdapter.shared.logger?.i('sendEvent $value');
+
+    await _mixpanel
+        .track(event: event, properties: Map<String, dynamic>.from(properties))
+        .then((value) {
+      Analytics.shared.logger?.i('sendEvent $value');
     }).catchError((e, stacktrace) {
-      AnalyticsLogAdapter.shared.logger
-          ?.e('sendEvent error: $e', e, stacktrace);
+      Analytics.shared.logger?.e('sendEvent error: $e', e, stacktrace);
     });
   }
 }

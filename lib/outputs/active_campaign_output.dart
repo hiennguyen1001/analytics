@@ -125,7 +125,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   String _contactId;
 
   @override
-  String get name => 'ActiveCampaignOutput';
+  String get name => 'activeCampaign';
 
   @override
   Future<void> sendEvent(String name, dynamic info) async {
@@ -173,7 +173,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
 
     var fields = await _listFields();
-    AnalyticsLogAdapter.shared.logger?.i('existing fields: [${fields.length}]');
+    Analytics.shared.logger?.i('existing fields: [${fields.length}]');
     if (fields.isNotEmpty) {
       for (var property in properties.entries) {
         String fieldId;
@@ -186,7 +186,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
         fieldId ??= await _createField(property.key);
 
-        AnalyticsLogAdapter.shared.logger?.i(
+        Analytics.shared.logger?.i(
             'update value ${property.value} for field $fieldId in contact $contactId');
         // Update field value
         await _updateField(contactId, fieldId, property.value);
@@ -215,7 +215,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
       fields.addAll(response['fields']);
       totalFields = int.parse(response['meta']['total']);
       offset += maxPage;
-      AnalyticsLogAdapter.shared.logger
+      Analytics.shared.logger
           ?.i('_listFields offset = $offset, totalFields = $totalFields');
     } while (offset < totalFields);
 
