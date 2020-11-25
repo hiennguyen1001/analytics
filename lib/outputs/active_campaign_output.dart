@@ -36,8 +36,8 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     List<String> tags,
   }) {
     _tags = tags ?? <String>[];
-    _firstName = firstName;
-    _lastName = lastName;
+    this.firstName = firstName;
+    this.lastName = lastName;
     _email = email;
     _proxyUrl = config['proxyUrl'];
     _enableHttp = config['enableHttp'] ?? true;
@@ -77,9 +77,12 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
     _trackingHttp.dio.options.contentType = 'application/x-www-form-urlencoded';
 
-    _firstName ??= email.substring(0, email.indexOf('@'));
+    this.firstName ??= email.substring(0, email.indexOf('@'));
+    this.lastName ??= '';
 
-    _lastName ??= '';
+    if (config.containsKey('nameProperties')) {
+      _nameProperties = config['nameProperties'];
+    }
   }
 
   /// Base api url
@@ -101,13 +104,13 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   String _eventUrl;
 
   /// Use first name
-  String _firstName;
+  String firstName;
 
   /// AC http api client
   HTTP _http;
 
   /// User last name
-  String _lastName;
+  String lastName;
 
   /// Proxy url
   String _proxyUrl;
@@ -123,6 +126,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
   /// User contact id
   String _contactId;
+
+  /// Name property fields
+  List _nameProperties = [];
 
   @override
   String get name => 'activeCampaign';
@@ -142,7 +148,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   @override
   Future<void> sendUserProperty(Map info) async {
     await _updateProperties(_email,
-        firstName: _firstName, lastName: _lastName, properties: info);
+        firstName: firstName, lastName: lastName, properties: info);
   }
 
   @override
@@ -166,6 +172,14 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     if (properties == null) {
       return null;
     }
+
+    for (var p in _nameProperties) {
+      if (properties.containsKey(p)) {
+        forceUpdated = true;
+        break;
+      }
+    }
+
     var contactId = await _createContact(email,
         firstName: firstName, lastName: lastName, forceUpdated: forceUpdated);
     if (contactId == null) {
@@ -225,6 +239,10 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   /// Update AC custom field with value
   Future<dynamic> _updateField(
       String contactId, String fieldId, dynamic value) async {
+    if (value is String) {
+      value = value.replaceAll('"', '\\"');
+    }
+
     var body = '''
           {
             "fieldValue": {
@@ -256,14 +274,14 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
   Future<dynamic> createContact() async {
     await _createContact(_email,
-        firstName: _firstName, lastName: _lastName, forceUpdated: false);
+        firstName: firstName, lastName: lastName, forceUpdated: false);
   }
 
   /// Create contact if not exist
   /// Return a contact id
   Future<dynamic> _createContact(String email,
       {String firstName, String lastName, bool forceUpdated = false}) async {
-    if (_contactId != null && _contactId.isNotEmpty) {
+    if (!forceUpdated && _contactId != null && _contactId.isNotEmpty) {
       return _contactId;
     }
 

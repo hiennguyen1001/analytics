@@ -48,7 +48,7 @@ extension $OutputType on OutputType {
 class Analytics {
   Analytics._privateConstructor();
   static Analytics shared = Analytics._privateConstructor();
-  final List<AnalyticsOutput> _outputs = [];
+  final List<AnalyticsOutput> outputs = [];
   Logger logger;
 
   static void init(Logger logger) {
@@ -58,9 +58,9 @@ class Analytics {
   /// Add the analytics outputs
   void addOutput(dynamic output) {
     if (output is List<AnalyticsOutput>) {
-      _outputs.addAll(output);
+      outputs.addAll(output);
     } else if (output is AnalyticsOutput) {
-      _outputs.add(output);
+      outputs.add(output);
     }
   }
 
@@ -75,7 +75,7 @@ class Analytics {
       {Map<OutputType, dynamic> mapper, dynamic info}) async {
     if (mapper != null) {
       for (var item in mapper.entries) {
-        var output = _outputs.firstWhere(
+        var output = outputs.firstWhere(
             (element) => element.name == item.key.name,
             orElse: () => null);
         if (output != null) {
@@ -88,7 +88,7 @@ class Analytics {
         }
       }
     } else if (info != null) {
-      for (final output in _outputs) {
+      for (final output in outputs) {
         try {
           await output.sendEvent(name, info);
         } catch (e, stacktrace) {
@@ -108,7 +108,7 @@ class Analytics {
   Future<void> sendUserProperty({Map info, Map<OutputType, Map> mapper}) async {
     if (mapper != null) {
       for (var entry in mapper.entries) {
-        var output = _outputs.firstWhere(
+        var output = outputs.firstWhere(
             (element) => element.name == entry.key.name,
             orElse: () => null);
         if (output != null) {
@@ -121,7 +121,7 @@ class Analytics {
         }
       }
     } else if (info != null) {
-      for (final output in _outputs) {
+      for (final output in outputs) {
         try {
           await output.sendUserProperty(info);
         } catch (e, stacktrace) {
@@ -133,7 +133,7 @@ class Analytics {
 
   /// Set user id for all outputs
   Future<void> setUserId(String value) async {
-    for (final output in _outputs) {
+    for (final output in outputs) {
       await output.setUserId(value);
     }
   }
