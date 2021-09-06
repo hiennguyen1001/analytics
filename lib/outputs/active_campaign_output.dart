@@ -74,8 +74,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
       _eventUrl = '';
       _trackingHttp = HTTP('https://trackcmp.net/', config);
     }
-
-    _trackingHttp.dio.options.contentType = 'application/x-www-form-urlencoded';
+    _trackingHttp.headers = {'content-type': 'application/x-www-form-urlencoded'};
 
     this.firstName ??= email.substring(0, email.indexOf('@'));
     this.lastName ??= '';
