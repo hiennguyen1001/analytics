@@ -74,7 +74,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
       _eventUrl = '';
       _trackingHttp = HTTP('https://trackcmp.net/', config);
     }
-    _trackingHttp.headers = {'content-type': 'application/x-www-form-urlencoded'};
+    _trackingHttp.headers = {
+      'content-type': 'application/x-www-form-urlencoded'
+    };
 
     this.firstName ??= email.substring(0, email.indexOf('@'));
     this.lastName ??= '';
@@ -185,54 +187,30 @@ class ActiveCampaignOutput extends AnalyticsOutput {
       return null;
     }
 
-    var fields = await _listFields();
-    Analytics.shared.logger?.i('existing fields: [${fields.length}]');
-    if (fields.isNotEmpty) {
-      for (var property in properties.entries) {
-        String fieldId;
-        for (var field in fields) {
-          if (property.key == field['title']) {
-            fieldId = field['id'];
-            break;
-          }
-        }
-
-        fieldId ??= await _createField(property.key);
-
-        Analytics.shared.logger?.i(
-            'update value ${property.value} for field $fieldId in contact $contactId');
-        // Update field value
-        await _updateField(contactId, fieldId, property.value);
+    for (var property in properties.entries) {
+      final searchField = await _searchField(property.key);
+      String fieldId;
+      if (searchField != null) {
+        fieldId = searchField['id'];
+      } else {
+        // Create field value
+        Analytics.shared.logger?.i('Create field ${property.key} ');
+        fieldId = await _createField(property.key);
       }
-    } else {
-      for (var property in properties.entries) {
-        // create custom field
-        var fieldId = await _createField(property.key);
-        // Update field value
-        await _updateField(contactId, fieldId, property.value);
-      }
+
+      // Update field value
+      Analytics.shared.logger?.i(
+          'update value ${property.value} for field $fieldId in contact $contactId');
+      await _updateField(contactId, fieldId, property.value);
     }
 
     return null;
   }
 
-  Future<dynamic> _listFields() async {
-    var fields = [];
-    var offset = 0;
-    var totalFields = 0;
-    final maxPage = 100;
-
-    do {
-      var response =
-          await _http.get('${_url}fields?limit=$maxPage&offset=$offset');
-      fields.addAll(response['fields']);
-      totalFields = int.parse(response['meta']['total']);
-      offset += maxPage;
-      Analytics.shared.logger
-          ?.i('_listFields offset = $offset, totalFields = $totalFields');
-    } while (offset < totalFields);
-
-    return fields;
+  Future<dynamic> _searchField(String field) async {
+    var response = await _http.get('${_url}fields?search=$field');
+    List fields = response['fields'] ?? [];
+    return fields.isNotEmpty ? fields.first : null;
   }
 
   /// Update AC custom field with value
