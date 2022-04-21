@@ -3,7 +3,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 
 class FirebaseOutput extends AnalyticsOutput {
-  static final analytics = FirebaseAnalytics();
+  static final analytics = FirebaseAnalytics.instance;
   static final observer = FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
@@ -24,6 +24,6 @@ class FirebaseOutput extends AnalyticsOutput {
 
   @override
   Future<void> setUserId(String value) async {
-    await analytics.setUserId(value);
+    await analytics.setUserId(id: value);
   }
 }
