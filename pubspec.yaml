@@ -12,17 +12,17 @@ dependencies:
   flutter:
     sdk: flutter
 
-  shared_preferences: ^2.0.6
-  uuid: ^3.0.4
-  firebase_core: ^1.4.0
-  firebase_analytics: ^8.2.0
+  shared_preferences: ^2.0.13
+  uuid: ^3.0.6
+  firebase_core: ^1.14.1
+  firebase_analytics: ^9.1.5
 
   robust_http:
     git:
-      url: git://github.com/bookbot-kids/robust_http.git
+      url: https://github.com/bookbot-kids/robust_http.git
   mixpanel_analytics:
     git:
-      url: git://github.com/koa-health/mixpanel_analytics.git
+      url: https://github.com/koa-health/mixpanel_analytics.git
 
 dependency_overrides:
   http_parser: ^4.0.0
