@@ -12,10 +12,10 @@ dependencies:
   flutter:
     sdk: flutter
 
-  shared_preferences: ^2.0.13
+  shared_preferences: ^2.0.15
   uuid: ^3.0.6
-  firebase_core: ^1.14.1
-  firebase_analytics: ^9.1.5
+  firebase_core: ^1.19.2
+  firebase_analytics: ^9.2.0
 
   robust_http:
     git:
