@@ -1,6 +1,5 @@
 import 'package:analytics/analytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_analytics/observer.dart';
 
 class FirebaseOutput extends AnalyticsOutput {
   static final analytics = FirebaseAnalytics.instance;

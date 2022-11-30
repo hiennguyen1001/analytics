@@ -13,9 +13,9 @@ dependencies:
     sdk: flutter
 
   shared_preferences: ^2.0.15
-  uuid: ^3.0.6
-  firebase_core: ^1.19.2
-  firebase_analytics: ^9.2.0
+  uuid: ^3.0.7
+  firebase_core: ^2.3.0
+  firebase_analytics: ^10.0.6
 
   robust_http:
     git:
