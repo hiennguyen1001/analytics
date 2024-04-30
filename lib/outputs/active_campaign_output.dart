@@ -210,7 +210,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   Future<dynamic> _searchField(String field) async {
     var response = await _http.get('${_url}fields?search=$field');
     List fields = response['fields'] ?? [];
-    return fields.isNotEmpty ? fields.first : null;
+    return fields.isNotEmpty ? fields.firstWhere((element) => field == element['title']) : null;
   }
 
   /// Update AC custom field with value
