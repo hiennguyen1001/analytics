@@ -1,5 +1,6 @@
 library analytics;
 
+import 'package:collection/collection.dart' show IterableExtension;
 export 'package:analytics/outputs/active_campaign_output.dart';
 export 'package:analytics/outputs/mix_panel_output.dart';
 import 'package:logger/logger.dart';
@@ -40,8 +41,8 @@ extension $OutputType on OutputType {
     'firebase': OutputType.firebase,
   };
 
-  String get name => $OutputType.typeString[this];
-  static OutputType fromString(String value) => $OutputType.outputEnum[value];
+  String? get name => $OutputType.typeString[this];
+  static OutputType? fromString(String value) => $OutputType.outputEnum[value];
 }
 
 /// Analytics class
@@ -49,7 +50,7 @@ class Analytics {
   Analytics._privateConstructor();
   static Analytics shared = Analytics._privateConstructor();
   final List<AnalyticsOutput> outputs = [];
-  Logger logger;
+  Logger? logger;
 
   static void init(Logger logger) {
     shared.logger = logger;
@@ -72,18 +73,17 @@ class Analytics {
   /// {'MixPanelOutput': 'value a', 'FirebaseOutput': 'value b'}
   /// ```
   Future<void> sendEvent(String name,
-      {Map<OutputType, dynamic> mapper, dynamic info}) async {
+      {Map<OutputType, dynamic>? mapper, dynamic info}) async {
     if (mapper != null) {
       for (var item in mapper.entries) {
-        var output = outputs.firstWhere(
-            (element) => element.name == item.key.name,
-            orElse: () => null);
+        var output = outputs.firstWhereOrNull(
+            (element) => element.name == item.key.name);
         if (output != null) {
           try {
             var data = item.value;
             await output.sendEvent(name, data);
           } catch (e, stacktrace) {
-            logger?.e('[${output.name}] Send event error', e, stacktrace);
+            logger?.e('[${output.name}] Send event error', error: e, stackTrace: stacktrace);
           }
         }
       }
@@ -92,7 +92,7 @@ class Analytics {
         try {
           await output.sendEvent(name, info);
         } catch (e, stacktrace) {
-          logger?.e('[${output.name}] Send event error', e, stacktrace);
+          logger?.e('[${output.name}] Send event error', error: e, stackTrace: stacktrace);
         }
       }
     }
@@ -105,18 +105,17 @@ class Analytics {
   /// ```
   /// {'MixPanelOutput': 'value a', 'FirebaseOutput': 'value b'}
   /// ```
-  Future<void> sendUserProperty({Map info, Map<OutputType, Map> mapper}) async {
+  Future<void> sendUserProperty({Map? info, Map<OutputType, Map>? mapper}) async {
     if (mapper != null) {
       for (var entry in mapper.entries) {
-        var output = outputs.firstWhere(
-            (element) => element.name == entry.key.name,
-            orElse: () => null);
+        var output = outputs.firstWhereOrNull(
+            (element) => element.name == entry.key.name);
         if (output != null) {
           try {
             var data = entry.value;
             await output.sendUserProperty(data);
           } catch (e, stacktrace) {
-            logger?.e('[${output.name}] Send property error $e', e, stacktrace);
+            logger?.e('[${output.name}] Send property error $e', error: e, stackTrace: stacktrace);
           }
         }
       }
@@ -125,7 +124,7 @@ class Analytics {
         try {
           await output.sendUserProperty(info);
         } catch (e, stacktrace) {
-          logger?.e('[${output.name}] Send property error $e', e, stacktrace);
+          logger?.e('[${output.name}] Send property error $e', error: e, stackTrace: stacktrace);
         }
       }
     }

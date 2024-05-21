@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 class MixPanelOutput extends AnalyticsOutput {
-  MixPanelOutput(Map configs, {String id}) {
+  MixPanelOutput(Map configs, {String? id}) {
     _mixpanel = MixpanelAnalytics(
         token: configs['mixpanelId'],
         proxyUrl: configs['crossOriginUrl'],
@@ -23,8 +23,8 @@ class MixPanelOutput extends AnalyticsOutput {
 
   static const String _userIdKey = 'mixpanel_user_id';
 
-  MixpanelAnalytics _mixpanel;
-  SharedPreferences _prefs;
+  late MixpanelAnalytics _mixpanel;
+  SharedPreferences? _prefs;
   final _user$ = StreamController<String>.broadcast();
 
   @override
@@ -40,16 +40,16 @@ class MixPanelOutput extends AnalyticsOutput {
     await _sendUserProperty(info);
   }
 
-  Future<SharedPreferences> get prefs async {
+  Future<SharedPreferences?> get prefs async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs;
   }
 
   Future<String> get _mixpanelUserId async {
-    var id = (await prefs).getString(_userIdKey);
+    var id = (await prefs)!.getString(_userIdKey);
     if (id == null) {
       id = Uuid().v4();
-      await (await prefs).setString(_userIdKey, id);
+      await (await prefs)!.setString(_userIdKey, id);
     }
 
     return id;
@@ -59,7 +59,7 @@ class MixPanelOutput extends AnalyticsOutput {
   Future<void> setUserId(String id) async {
     var oldId = await _mixpanelUserId;
     // only migrate if id is changed
-    if (oldId != id && id != null && oldId != null) {
+    if (oldId != id) {
       // migrate cognito user id into guest id
       var properties = <String, dynamic>{};
       properties['\$identified_id'] = id;
@@ -68,10 +68,10 @@ class MixPanelOutput extends AnalyticsOutput {
           .track(event: '\$identify', properties: properties)
           .then((value) async {
         Analytics.shared.logger?.i('merge [$oldId, $id] $value');
-        await (await prefs).setString(_userIdKey, id);
+        await (await prefs)!.setString(_userIdKey, id);
       }).catchError((e, stacktrace) {
         Analytics.shared.logger
-            ?.e('merge [$oldId, $id] error: $e', e, stacktrace);
+            ?.e('merge [$oldId, $id] error: $e', error: e, stackTrace: stacktrace);
       });
     }
   }
@@ -90,7 +90,7 @@ class MixPanelOutput extends AnalyticsOutput {
         Analytics.shared.logger?.i('trackUserProperty $value');
       }).catchError((e, stacktrace) {
         Analytics.shared.logger
-            ?.e('trackUserProperty error: $e', e, stacktrace);
+            ?.e('trackUserProperty error: $e', error: e, stackTrace: stacktrace);
       });
     }
   }
@@ -103,7 +103,7 @@ class MixPanelOutput extends AnalyticsOutput {
         .then((value) {
       Analytics.shared.logger?.i('sendEvent $value');
     }).catchError((e, stacktrace) {
-      Analytics.shared.logger?.e('sendEvent error: $e', e, stacktrace);
+      Analytics.shared.logger?.e('sendEvent error: $e', error: e, stackTrace: stacktrace);
     });
   }
 }
