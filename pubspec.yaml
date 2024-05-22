@@ -27,7 +27,6 @@ dependencies:
 
 dependency_overrides:
   http_parser: ^4.0.0
-  http: ^0.13.0
 
 dev_dependencies:
   flutter_test:
