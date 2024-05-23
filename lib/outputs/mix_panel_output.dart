@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:analytics/analytics.dart';
-import 'package:mixpanel_analytics/mixpanel_analytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+
+import '../mixpanel_analytics.dart';
 
 class MixPanelOutput extends AnalyticsOutput {
   MixPanelOutput(Map configs, {String? id}) {

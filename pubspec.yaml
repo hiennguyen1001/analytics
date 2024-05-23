@@ -20,9 +20,6 @@ dependencies:
   robust_http:
     git:
       url: https://github.com/bookbot-kids/robust_http.git
-  mixpanel_analytics:
-    git:
-      url: https://github.com/koa-health/mixpanel_analytics.git
   collection: ^1.15.0-nullsafety.4
 
 dependency_overrides:
