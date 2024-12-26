@@ -56,7 +56,10 @@ class ActiveCampaignOutput extends AnalyticsOutput {
       _http = HTTP(_baseUrl, config);
     }
 
-    _http.headers = {'Api-Token': config['activeCampaignKey']};
+    _http.headers = {
+      'Api-Token': config['activeCampaignKey'],
+      'X-Requested-With': 'XMLHttpRequest'
+    };
 
     _eventKey = config['activeCampaignEventKey'];
     _eventActid = config['activeCampaignEventActid'];
