@@ -31,9 +31,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   ActiveCampaignOutput(
     String email,
     Map config, {
-    String firstName,
-    String lastName,
-    List<String> tags,
+    String? firstName,
+    String? lastName,
+    List<String>? tags,
   }) {
     _tags = tags ?? <String>[];
     this.firstName = firstName;
@@ -41,7 +41,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     _email = email;
     _proxyUrl = config['proxyUrl'];
     _enableHttp = config['enableHttp'] ?? true;
-    _suffixUrl = _proxyUrl != null && !_proxyUrl.endsWith('/') ? '/' : '';
+    _suffixUrl = _proxyUrl != null && !_proxyUrl!.endsWith('/') ? '/' : '';
 
     if (_enableHttp == true) {
       _baseUrl =
@@ -51,9 +51,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
 
     if (_proxyUrl != null) {
-      _http = HTTP(null, config);
+      _http = HTTP(null, config as Map<String, dynamic>);
     } else {
-      _http = HTTP(_baseUrl, config);
+      _http = HTTP(_baseUrl, config as Map<String, dynamic>);
     }
 
     _http.headers = {
@@ -66,10 +66,10 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
     // init for event tracking http
     if (_proxyUrl != null) {
-      if (_enableHttp) {
-        _eventUrl = _proxyUrl + _suffixUrl + 'https://trackcmp.net/';
+      if (_enableHttp!) {
+        _eventUrl = _proxyUrl! + _suffixUrl + 'https://trackcmp.net/';
       } else {
-        _eventUrl = _proxyUrl + _suffixUrl + 'trackcmp.net/';
+        _eventUrl = _proxyUrl! + _suffixUrl + 'trackcmp.net/';
       }
 
       _trackingHttp = HTTP(null, config);
@@ -90,49 +90,49 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   }
 
   /// Base api url
-  String _baseUrl;
+  String? _baseUrl;
 
   /// User email
-  String _email;
+  String? _email;
 
   /// whether to include http prefix
-  bool _enableHttp;
+  bool? _enableHttp;
 
   /// AC event act id
-  String _eventActid;
+  String? _eventActid;
 
   /// AC event key
-  String _eventKey;
+  String? _eventKey;
 
   /// Event tracking url
-  String _eventUrl;
+  String? _eventUrl;
 
   /// Use first name
-  String firstName;
+  String? firstName;
 
   /// AC http api client
-  HTTP _http;
+  late HTTP _http;
 
   /// User last name
-  String lastName;
+  String? lastName;
 
   /// Proxy url
-  String _proxyUrl;
+  String? _proxyUrl;
 
   /// Suffix url
-  String _suffixUrl;
+  late String _suffixUrl;
 
   /// AC tracking http client
-  HTTP _trackingHttp;
+  late HTTP _trackingHttp;
 
   /// User tags to add to contact
-  List<String> _tags;
+  late List<String> _tags;
 
   /// User contact id
-  String _contactId;
+  String? _contactId;
 
   /// Name property fields
-  List _nameProperties = [];
+  List? _nameProperties = [];
 
   @override
   String get name => 'activeCampaign';
@@ -161,23 +161,23 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   /// Get the url if using proxy
   String get _url {
     if (_proxyUrl != null) {
-      return _proxyUrl + _suffixUrl + _baseUrl;
+      return _proxyUrl! + _suffixUrl + _baseUrl!;
     }
 
     return '';
   }
 
   /// Update AC user properties (custom properties)
-  Future<dynamic> _updateProperties(String email,
-      {String firstName,
-      String lastName,
-      Map properties,
+  Future<dynamic> _updateProperties(String? email,
+      {String? firstName,
+      String? lastName,
+      Map? properties,
       bool forceUpdated = false}) async {
     if (properties == null) {
       return null;
     }
 
-    for (var p in _nameProperties) {
+    for (var p in _nameProperties!) {
       if (properties.containsKey(p)) {
         forceUpdated = true;
         break;
@@ -192,7 +192,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
     for (var property in properties.entries) {
       final searchField = await _searchField(property.key);
-      String fieldId;
+      String? fieldId;
       if (searchField != null) {
         fieldId = searchField['id'];
       } else {
@@ -218,7 +218,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
   /// Update AC custom field with value
   Future<dynamic> _updateField(
-      String contactId, String fieldId, dynamic value) async {
+      String contactId, String? fieldId, dynamic value) async {
     if (value is String) {
       value = value.replaceAll('"', '\\"');
     }
@@ -259,9 +259,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
   /// Create contact if not exist
   /// Return a contact id
-  Future<dynamic> _createContact(String email,
-      {String firstName, String lastName, bool forceUpdated = false}) async {
-    if (!forceUpdated && _contactId != null && _contactId.isNotEmpty) {
+  Future<dynamic> _createContact(String? email,
+      {String? firstName, String? lastName, bool forceUpdated = false}) async {
+    if (!forceUpdated && _contactId != null && _contactId!.isNotEmpty) {
       return _contactId;
     }
 
@@ -304,7 +304,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
 
   /// Send tracking event
   Future<dynamic> _trackEvent(
-      String eventName, String email, String eventData) async {
+      String eventName, String? email, String eventData) async {
     var visit = '{"email" : "$email"}';
     var params = {
       'key': _eventKey,
@@ -318,10 +318,10 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   }
 
   /// Add a tag into contact. Create if not exist
-  Future<void> addTagToContact(String tag, String contactId) async {
+  Future<void> addTagToContact(String tag, String? contactId) async {
     // get all tags
     var response = await _http.get('${_url}tags?limit=100');
-    var tagIds = <String, String>{};
+    var tagIds = <String?, String?>{};
     if (response['tags'] != null) {
       List tags = response['tags'];
       tags.forEach((item) {

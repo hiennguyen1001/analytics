@@ -5,27 +5,29 @@ publish_to: none
 homepage:
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
-  flutter: ">=1.17.0 <2.0.0"
+  sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
-  shared_preferences: ^2.0.15
-  uuid: ^3.0.7
-  firebase_core: ^2.3.0
-  firebase_analytics: ^10.0.6
+  shared_preferences: ^2.2.2
+  uuid: ^4.1.0
+  firebase_core: ^2.24.2
+  firebase_analytics: ^10.8.0
 
   robust_http:
     git:
       url: https://github.com/bookbot-kids/robust_http.git
+      ref: v3_stable_mdc
   mixpanel_analytics:
     git:
       url: https://github.com/koa-health/mixpanel_analytics.git
+  collection: ^1.15.0-nullsafety.4
 
 dependency_overrides:
   http_parser: ^4.0.0
+  http: ^0.13.0
 
 dev_dependencies:
   flutter_test:
