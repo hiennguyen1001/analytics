@@ -12,6 +12,9 @@ class MixPanelOutput extends AnalyticsOutput {
         token: configs['mixpanelId'],
         proxyUrl: configs['crossOriginUrl'],
         userId$: _user$.stream,
+        optionalHeaders: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
         verbose: true,
         shouldAnonymize: true,
         shaFn: (value) => value,
