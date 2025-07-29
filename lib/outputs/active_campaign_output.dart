@@ -42,7 +42,10 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     _proxyUrl = config['proxyUrl'];
     _enableHttp = config['enableHttp'] ?? true;
     _suffixUrl = _proxyUrl != null && !_proxyUrl!.endsWith('/') ? '/' : '';
-
+    final httpConfig = Map<String, dynamic>.from(config as Map<String, dynamic>);
+    if (_proxyUrl != null) {
+      httpConfig.remove('proxyUrl');
+    }
     if (_enableHttp == true) {
       _baseUrl =
           'https://${config["activeCampaignAccount"]}.api-us1.com/api/3/';
@@ -51,12 +54,9 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
 
     if (_proxyUrl != null) {
-      final httpConfig = <String, dynamic>{};
-      httpConfig.addAll(config as Map<String, dynamic>);
-      httpConfig.remove('proxyUrl');
       _http = HTTP(null, httpConfig);
     } else {
-      _http = HTTP(_baseUrl, config as Map<String, dynamic>);
+      _http = HTTP(_baseUrl, config);
     }
 
     _http.headers = {
@@ -75,7 +75,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
         _eventUrl = _proxyUrl! + _suffixUrl + 'trackcmp.net/';
       }
 
-      _trackingHttp = HTTP(null, config);
+      _trackingHttp = HTTP(null, httpConfig);
     } else {
       _eventUrl = '';
       _trackingHttp = HTTP('https://trackcmp.net/', config);
