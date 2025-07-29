@@ -51,7 +51,10 @@ class ActiveCampaignOutput extends AnalyticsOutput {
     }
 
     if (_proxyUrl != null) {
-      _http = HTTP(null, config as Map<String, dynamic>);
+      final httpConfig = <String, dynamic>{};
+      httpConfig.addAll(config as Map<String, dynamic>);
+      httpConfig.remove('proxyUrl');
+      _http = HTTP(null, httpConfig);
     } else {
       _http = HTTP(_baseUrl, config as Map<String, dynamic>);
     }
