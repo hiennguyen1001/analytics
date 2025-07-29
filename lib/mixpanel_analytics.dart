@@ -399,7 +399,6 @@ class MixpanelAnalytics {
     var url = '$baseApiUrl/$op/?data=$event&verbose=${_verbose ? 1 : 0}'
         '&ip=${_useIp ? 1 : 0}';
     if (_proxyUrl != null) {
-      url = url.replaceFirst('https://', '');
       url = '$_proxyUrl/$url';
     }
 
