@@ -303,7 +303,7 @@ class MixpanelAnalytics {
 
   /// Uploads all pending events in batches of maximum [maxEventsInBatchRequest].
   Future<void> _uploadEvents(List<dynamic> events, Function sendFn) async {
-    List<dynamic> unsentEvents = [];
+    var unsentEvents = <dynamic>[];
     while (events.isNotEmpty) {
       final maxRange = _getMaximumRange(events.length);
       final range = events.getRange(0, maxRange).toList();
@@ -331,13 +331,11 @@ class MixpanelAnalytics {
       ...props,
       'token': _token,
       'time': time.millisecondsSinceEpoch,
-      'distinct_id': props['distinct_id'] == null
-          ? _userId == null
+      'distinct_id': props['distinct_id'] ?? (_userId == null
               ? 'Unknown'
               : _shouldAnonymize
                   ? _anonymize('userId', _userId!)
-                  : _userId
-          : props['distinct_id']
+                  : _userId)
     };
     if (ip != null) {
       properties = {...properties, 'ip': ip};
@@ -362,13 +360,11 @@ class MixpanelAnalytics {
       operation.propertyKey: value,
       '\$token': _token,
       '\$time': time.millisecondsSinceEpoch,
-      '\$distinct_id': value['distinct_id'] == null
-          ? _userId == null
+      '\$distinct_id': value['distinct_id'] ?? (_userId == null
               ? 'Unknown'
               : _shouldAnonymize
                   ? _anonymize('userId', _userId!)
-                  : _userId
-          : value['distinct_id']
+                  : _userId)
     };
     if (ip != null) {
       data = {...data, '\$ip': ip};

@@ -10,7 +10,7 @@ class FirebaseOutput extends AnalyticsOutput {
 
   @override
   Future<void> sendEvent(String name, dynamic info) async {
-    var params = Map<String, dynamic>.from(info);
+    var params = Map<String, Object>.from(info);
     await analytics.logEvent(name: name, parameters: params);
   }
 
