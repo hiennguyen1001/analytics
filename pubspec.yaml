@@ -13,8 +13,8 @@ dependencies:
 
   shared_preferences: ^2.2.2
   uuid: ^4.1.0
-  firebase_core: ^4.0.0
-  firebase_analytics: ^12.0.0
+  firebase_core: ^3.15.2
+  firebase_analytics: ^11.0.0
 
   robust_http:
     git:
