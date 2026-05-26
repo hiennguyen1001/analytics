@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:analytics/analytics.dart';
+import 'package:collection/collection.dart';
 import 'package:robust_http/robust_http.dart';
 
 /// An output to send tracking event into actice campaign.
@@ -217,7 +218,7 @@ class ActiveCampaignOutput extends AnalyticsOutput {
   Future<dynamic> _searchField(String field) async {
     var response = await _http.get('${_url}fields?search=$field');
     List fields = response['fields'] ?? [];
-    return fields.isNotEmpty ? fields.firstWhere((element) => field == element['title']) : null;
+    return fields.isNotEmpty ? fields.firstWhere((element) => field == element['title'], orElse: () => null) : null;
   }
 
   /// Update AC custom field with value
